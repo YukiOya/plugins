@@ -56,7 +56,7 @@ public class FlutterWebViewClient extends WebViewClient {
               Log.e(
                   TAG,
                   String.format(
-                      "Failed to handle channel reply: %s: %s" + errorCode, errorMessage));
+                      "Failed to handle channel reply: %s: %s", errorCode, errorMessage));
             }
 
             @Override
