@@ -106,7 +106,7 @@ public class FlutterWebViewClient extends WebViewClient {
     Map<String, Object> args = new HashMap<>();
     args.put("errorCode", error.getErrorCode());
     args.put("description", error.getDescription());
-    args.put("url", request.getUrl());
+    args.put("url", request.getUrl().toString());
     methodChannel.invokeMethod("onReceivedError", args);
   }
 }
