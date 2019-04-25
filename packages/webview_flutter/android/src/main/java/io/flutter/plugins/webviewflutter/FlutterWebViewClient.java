@@ -36,7 +36,7 @@ public class FlutterWebViewClient extends WebViewClient {
   }
 
   private boolean onShouldOverrideUrlLoading(final WebView view, final String url) {
-    if (shouldOverrideUrlLoading) {
+    if (!url.startsWith("http") || shouldOverrideUrlLoading) {
       Map<String, Object> args = new HashMap<>();
       args.put("url", url);
       methodChannel.invokeMethod(
