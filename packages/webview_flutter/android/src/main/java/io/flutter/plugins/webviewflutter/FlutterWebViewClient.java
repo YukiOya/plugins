@@ -17,8 +17,6 @@ public class FlutterWebViewClient extends WebViewClient {
 
   private final MethodChannel methodChannel;
 
-  private Boolean shouldOverrideUrlLoading = false;
-
   FlutterWebViewClient(MethodChannel methodChannel) {
     assert methodChannel != null;
     this.methodChannel = methodChannel;
@@ -36,7 +34,6 @@ public class FlutterWebViewClient extends WebViewClient {
   }
 
   private boolean onShouldOverrideUrlLoading(final WebView view, final String url) {
-    if (!url.startsWith("http") || shouldOverrideUrlLoading) {
       Map<String, Object> args = new HashMap<>();
       args.put("url", url);
       methodChannel.invokeMethod(
@@ -45,7 +42,7 @@ public class FlutterWebViewClient extends WebViewClient {
           new MethodChannel.Result() {
             @Override
             public void success(Object result) {
-              shouldOverrideUrlLoading = (Boolean) result;
+              boolean shouldOverrideUrlLoading = (Boolean) result;
               if (!shouldOverrideUrlLoading) {
                 view.loadUrl(url);
               }
@@ -63,10 +60,6 @@ public class FlutterWebViewClient extends WebViewClient {
             public void notImplemented() {}
           });
       return true;
-    } else {
-      shouldOverrideUrlLoading = true;
-      return false;
-    }
   }
 
   @Override
