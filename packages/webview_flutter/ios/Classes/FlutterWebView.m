@@ -53,6 +53,9 @@
       configuration.websiteDataStore = [WKWebsiteDataStore defaultDataStore];
     }
     _webView = [[WKWebView alloc] initWithFrame:frame configuration:configuration];
+    // NOTE: iOS13でscrollbarが不適切な場所（画面中央）に表示される時がある
+    _webView.scrollView.showsVerticalScrollIndicator = NO;
+    _webView.scrollView.showsHorizontalScrollIndicator = NO;
     _webView.navigationDelegate = self;
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
     _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
