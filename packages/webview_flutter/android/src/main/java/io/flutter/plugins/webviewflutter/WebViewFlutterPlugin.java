@@ -4,7 +4,11 @@
 
 package io.flutter.plugins.webviewflutter;
 
+import androidx.annotation.NonNull;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
@@ -16,9 +20,11 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
  * <p>Call {@link #registerWith(Registrar)} to use the stable {@code io.flutter.plugin.common}
  * package instead.
  */
-public class WebViewFlutterPlugin implements FlutterPlugin {
+public class WebViewFlutterPlugin implements FlutterPlugin, ActivityAware {
 
   private FlutterCookieManager flutterCookieManager;
+
+  private FlutterPluginBinding pluginBinding;
 
   /**
    * Add an instance of this to {@link io.flutter.embedding.engine.plugins.PluginRegistry} to
@@ -42,33 +48,58 @@ public class WebViewFlutterPlugin implements FlutterPlugin {
    * won't react to changes in activity or context, unlike {@link CameraPlugin}.
    */
   public static void registerWith(Registrar registrar) {
+    FlutterWebChromeClient chromeClient = new FlutterWebChromeClient(registrar.activity());
     registrar
+        .addActivityResultListener(chromeClient)
         .platformViewRegistry()
         .registerViewFactory(
             "plugins.flutter.io/webview",
-            new WebViewFactory(registrar.messenger(), registrar.view()));
+            new WebViewFactory(registrar.messenger(), registrar.view(), chromeClient));
     new FlutterCookieManager(registrar.messenger());
   }
 
   @Override
   public void onAttachedToEngine(FlutterPluginBinding binding) {
+    pluginBinding = binding;
     BinaryMessenger messenger = binding.getBinaryMessenger();
-    binding
-        .getFlutterEngine()
-        .getPlatformViewsController()
-        .getRegistry()
-        .registerViewFactory(
-            "plugins.flutter.io/webview", new WebViewFactory(messenger, /*containerView=*/ null));
     flutterCookieManager = new FlutterCookieManager(messenger);
   }
 
   @Override
   public void onDetachedFromEngine(FlutterPluginBinding binding) {
+    pluginBinding = null;
     if (flutterCookieManager == null) {
       return;
     }
 
     flutterCookieManager.dispose();
     flutterCookieManager = null;
+  }
+
+  @Override
+  public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    FlutterWebChromeClient chromeClient = new FlutterWebChromeClient(binding.getActivity());
+    binding.addActivityResultListener(chromeClient);
+    BinaryMessenger messenger = pluginBinding.getBinaryMessenger();
+
+    pluginBinding
+            .getPlatformViewRegistry()
+            .registerViewFactory(
+                    "plugins.flutter.io/webview",
+                    new WebViewFactory(messenger, /*containerView=*/ null, chromeClient));
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+    onAttachedToActivity(binding);
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {
+    onDetachedFromActivity();
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
   }
 }
